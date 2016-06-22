@@ -113,13 +113,13 @@ extra_opts['cmdclass'] = {
     "uninstall_service": UninstallService
 }
 
-setup(name='mongo-connector',
-      version="2.3",
-      author="MongoDB, Inc.",
-      author_email='mongodb-user@googlegroups.com',
-      description='Mongo Connector',
+setup(name='mongo-connector-drip',
+      version="1.0",
+      author="DR",
+      author_email='dl-drtustreamingteam@dr.dk',
+      description='Mongo Connector for DRIP',
       keywords=['mongo-connector', 'mongo', 'mongodb', 'solr', 'elasticsearch'],
-      url='https://github.com/10gen-labs/mongo-connector',
+      url='https://github.com/drdk/mongo-connector-drip',
       license="http://www.apache.org/licenses/LICENSE-2.0.html",
       platforms=["any"],
       classifiers=filter(None, classifiers.split("\n")),
