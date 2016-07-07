@@ -176,7 +176,7 @@ class DocManager(DocManagerBase):
         return message
 
     def _send_upsert(self, json):
-        var success = true
+        success = true
         self.connection.connect()
         self.connection.request('POST', '/od-changelog-in/api', json, self.headers)
         response = self.connection.getresponse()
