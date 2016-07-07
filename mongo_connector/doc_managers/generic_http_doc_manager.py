@@ -180,7 +180,7 @@ class DocManager(DocManagerBase):
         self.connection.connect()
         self.connection.request('POST', '/od-changelog-in/api', json, self.headers)
         response = self.connection.getresponse()
-        if response.status == 500:
+        if response.status != 200:
             LOG.exception(response.msg)
             success = False
         r = response.read()
