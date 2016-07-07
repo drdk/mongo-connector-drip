@@ -176,13 +176,13 @@ class DocManager(DocManagerBase):
         return message
 
     def _send_upsert(self, json):
-        success = true
+        success = True
         self.connection.connect()
         self.connection.request('POST', '/od-changelog-in/api', json, self.headers)
         response = self.connection.getresponse()
         if response.status == 500:
             LOG.exception(response.msg)
-            success = false
+            success = False
         r = response.read()
         self.connection.close()
         return success
