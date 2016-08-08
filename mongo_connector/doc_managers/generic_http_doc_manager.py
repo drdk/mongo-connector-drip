@@ -24,6 +24,7 @@ import json
 import util
 import time
 import os
+import pymongo
 
 from datetime import datetime
 from threading import Timer
@@ -37,7 +38,9 @@ from mongo_connector.util import exception_wrapper, retry_until_ok
 from mongo_connector.doc_managers.doc_manager_base import DocManagerBase
 from mongo_connector.doc_managers.formatters import DefaultDocumentFormatter
 
-wrap_exceptions = exception_wrapper({    })
+wrap_exceptions = exception_wrapper({
+    pymongo.errors.ConnectionFailure: errors.ConnectionFailed,
+    pymongo.errors.OperationFailure: errors.OperationFailed})
 
 LOG = logging.getLogger(__name__)
 
@@ -55,8 +58,14 @@ class DocManager(DocManagerBase):
     Receives documents from an OplogThread and sends updates to Endpoint.
     """
 
-    def __init__(self, url, chunk_size, auto_commit_interval=DEFAULT_COMMIT_INTERVAL, unique_key='_id', **kwargs):
+    def __init__(self, url, mongo_address, chunk_size, auto_commit_interval=DEFAULT_COMMIT_INTERVAL, unique_key='_id', **kwargs):
  
+        self.mongo = pymongo.MongoClient(
+            mongo_address, **kwargs.get('clientOptions', {}))
+        except pymongo.errors.InvalidURI:
+            raise errors.ConnectionFailed("Invalid URI for MongoDB")
+        except pymongo.errors.ConnectionFailure:
+            raise errors.ConnectionFailed("Failed to connect to MongoDB")
         self.unique_key = unique_key
         self.url = url
         self.connection = httplib.HTTPConnection(self.url)
@@ -83,7 +92,8 @@ class DocManager(DocManagerBase):
     @wrap_exceptions
     def update(self, document_id, update_spec, namespace, timestamp):
         messages = []
-        message = self._doc_to_json(self._formatter.format_document(update_spec), str(document_id), 'U', timestamp)
+        db, coll = self._db_and_collection(namespace)
+        message = self._doc_to_json(self._formatter.format_document(self.mongo[db][coll].find_one({_id : document_id}), str(document_id), 'U', timestamp)
         messages.append(message)
         jsonmessages = json.dumps(messages, default=json_util.default)
         if (self._send_upsert(jsonmessages)):
@@ -165,6 +175,9 @@ class DocManager(DocManagerBase):
             newitem = {'_ts' : int(timestamp)}
             dict.append(newitem)
             return dict
+
+    def _db_and_collection(self, namespace):
+        return namespace.split('.', 1)
 
     def _doc_to_json(self, doc, document_id, action, timestamp):
         message = {
