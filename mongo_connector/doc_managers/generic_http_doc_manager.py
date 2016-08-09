@@ -58,10 +58,10 @@ class DocManager(DocManagerBase):
     Receives documents from an OplogThread and sends updates to Endpoint.
     """
 
-    def __init__(self, url, mongo_address, chunk_size, auto_commit_interval=DEFAULT_COMMIT_INTERVAL, unique_key='_id', **kwargs):
- 
-        self.mongo = pymongo.MongoClient(
-            mongo_address, **kwargs.get('clientOptions', {}))
+    def __init__(self, url, chunk_size, auto_commit_interval=DEFAULT_COMMIT_INTERVAL, unique_key='_id', **kwargs):
+        try:
+            self.mongo = pymongo.MongoClient(
+            kwargs.get('mongoUrl'))
         except pymongo.errors.InvalidURI:
             raise errors.ConnectionFailed("Invalid URI for MongoDB")
         except pymongo.errors.ConnectionFailure:
@@ -72,7 +72,6 @@ class DocManager(DocManagerBase):
         self.headers = {'Content-type': 'application/json'}
 
         self.auto_commit_interval = auto_commit_interval
-        self.unique_key = unique_key
         self.chunk_size = chunk_size
         self._formatter = DateTimeDocumentFormatter()
 
@@ -93,7 +92,7 @@ class DocManager(DocManagerBase):
     def update(self, document_id, update_spec, namespace, timestamp):
         messages = []
         db, coll = self._db_and_collection(namespace)
-        message = self._doc_to_json(self._formatter.format_document(self.mongo[db][coll].find_one({_id : document_id}), str(document_id), 'U', timestamp)
+        message = self._doc_to_json(self._formatter.format_document(self.mongo[db][coll].find_one({"_id" : document_id})), str(document_id), 'U', timestamp)
         messages.append(message)
         jsonmessages = json.dumps(messages, default=json_util.default)
         if (self._send_upsert(jsonmessages)):
