@@ -62,6 +62,7 @@ class DocManager(DocManagerBase):
         try:
             self.mongo = pymongo.MongoClient(
             kwargs.get('mongoUrl'))
+            self.mongo.MediaUniverse.authenticate(kwargs.pop('auth_username', None), kwargs.pop('auth_key', None))
         except pymongo.errors.InvalidURI:
             raise errors.ConnectionFailed("Invalid URI for MongoDB")
         except pymongo.errors.ConnectionFailure:
