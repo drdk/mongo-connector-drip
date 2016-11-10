@@ -60,6 +60,9 @@ class DocManager(DocManagerBase):
     """
 
     def __init__(self, url, chunk_size, auto_commit_interval=DEFAULT_COMMIT_INTERVAL, unique_key='_id', **kwargs):
+        self.ironmq = IronMQ(host='mq-aws-eu-west-1-1.iron.io',
+                project_id='58245610bccbd80006c37ca8',
+                token='fwkpuqyI3myiZI469Nfi')
         try:
             self.mongo = pymongo.MongoClient(
             kwargs.get('mongoUrl'))
@@ -68,11 +71,7 @@ class DocManager(DocManagerBase):
             raise errors.ConnectionFailed("Invalid URI for MongoDB")
         except pymongo.errors.ConnectionFailure:
             raise errors.ConnectionFailed("Failed to connect to MongoDB")
-        self.ironmq = IronMQ(host='mq-aws-eu-west-1-1.iron.io',
-                project_id='58245610bccbd80006c37ca8',
-                token='fwkpuqyI3myiZI469Nfi')
-        self.unique_key = unique_key
-        
+        self.unique_key = unique_key        
         self.auto_commit_interval = auto_commit_interval
         self.chunk_size = chunk_size
         self._formatter = DateTimeDocumentFormatter()
@@ -190,6 +189,7 @@ class DocManager(DocManagerBase):
 
     def _send_upsert(self, json):
         success = True
+        LOG.info("sending to ironmq")
         queue = ironmq.queue('test')
         queue.post(json)
         return success
