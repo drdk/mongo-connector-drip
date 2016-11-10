@@ -192,7 +192,7 @@ class DocManager(DocManagerBase):
 
     def _send_upsert(self, json):
         success = True
-        LOG.info("sending to ironmq")
+        LOG.debug("sending to ironmq")
         queue = self.ironmq.queue('test')
         queue.post(json)
         return success
