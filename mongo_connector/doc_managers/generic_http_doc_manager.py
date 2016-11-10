@@ -60,9 +60,10 @@ class DocManager(DocManagerBase):
     """
 
     def __init__(self, url, chunk_size, auto_commit_interval=DEFAULT_COMMIT_INTERVAL, unique_key='_id', **kwargs):
-        self.ironmq = IronMQ(host='mq-aws-eu-west-1-1.iron.io',
-                project_id='58245610bccbd80006c37ca8',
-                token='fwkpuqyI3myiZI469Nfi')
+        self.ironmq = IronMQ(host=kwargs.get('ironMqHost'),
+                project_id=kwargs.get('ironMqProjectId'),
+                token=kwargs.get('ironMqToken'))
+        self.ironMqQueue = self.ironmq.queue(kwargs.get('ironMqQueueName'))
         try:
             self.mongo = pymongo.MongoClient(
             kwargs.get('mongoUrl'))
@@ -192,6 +193,5 @@ class DocManager(DocManagerBase):
 
     def _send_upsert(self, json):
         success = True
-        queue = self.ironmq.queue('test')
-        queue.post(json)
+        self.ironMqQueue.post(json)
         return success
