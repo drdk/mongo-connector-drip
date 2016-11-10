@@ -145,6 +145,9 @@ class DocManager(DocManagerBase):
 
     def search(self, start_ts, end_ts):
         pass
+    
+    def handle_command(self, command_doc, namespace, timestamp):
+        pass
 
     @wrap_exceptions
     def get_last_doc(self):
