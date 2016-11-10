@@ -29,6 +29,7 @@ import pymongo
 from datetime import datetime
 from threading import Timer
 from bson import json_util
+from iron_mq import *
 
 from mongo_connector import errors
 from mongo_connector.compat import u
@@ -66,6 +67,9 @@ class DocManager(DocManagerBase):
             raise errors.ConnectionFailed("Invalid URI for MongoDB")
         except pymongo.errors.ConnectionFailure:
             raise errors.ConnectionFailed("Failed to connect to MongoDB")
+        self.ironmq = IronMQ(host='mq-aws-eu-west-1-1.iron.io',
+                project_id='58245610bccbd80006c37ca8',
+                token='fwkpuqyI3myiZI469Nfi')
         self.unique_key = unique_key
         self.url = url
         self.connection = httplib.HTTPConnection(self.url)
@@ -189,12 +193,6 @@ class DocManager(DocManagerBase):
 
     def _send_upsert(self, json):
         success = True
-        self.connection.connect()
-        self.connection.request('POST', '/od-changelog-in/api', json, self.headers)
-        response = self.connection.getresponse()
-        if response.status != 200:
-            LOG.exception(response.msg)
-            success = False
-        r = response.read()
-        self.connection.close()
+        queue = ironmq.queue('test')
+        queue.post(json)
         return success
