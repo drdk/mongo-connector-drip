@@ -72,10 +72,7 @@ class DocManager(DocManagerBase):
                 project_id='58245610bccbd80006c37ca8',
                 token='fwkpuqyI3myiZI469Nfi')
         self.unique_key = unique_key
-        self.url = url
-        self.connection = httplib.HTTPConnection(self.url)
-        self.headers = {'Content-type': 'application/json'}
-
+        
         self.auto_commit_interval = auto_commit_interval
         self.chunk_size = chunk_size
         self._formatter = DateTimeDocumentFormatter()
@@ -84,7 +81,6 @@ class DocManager(DocManagerBase):
 
     def stop(self):
         """Stop the auto-commit thread."""
-        self.connection.close()
         self.auto_commit_interval = None
 
     def apply_update(self, doc, update_spec):
