@@ -60,10 +60,10 @@ class DocManager(DocManagerBase):
     """
 
     def __init__(self, url, chunk_size, auto_commit_interval=DEFAULT_COMMIT_INTERVAL, unique_key='_id', **kwargs):
-        self.ironmq = IronMQ(host=kwargs.get('ironMqHost'),
-                project_id=kwargs.get('ironMqProjectId'),
-                token=kwargs.get('ironMqToken'))
-        self.ironMqQueue = self.ironmq.queue(kwargs.get('ironMqQueueName'))
+        self.ironmq = IronMQ(host=kwargs.pop('ironMqHost', None),
+                project_id=kwargs.pop('ironMqProjectId', None),
+                token=kwargs.pop('ironMqToken', None))
+        self.ironMqQueue = self.ironmq.queue(kwargs.pop('ironMqQueueName', None))
         try:
             self.mongo = pymongo.MongoClient(
             kwargs.get('mongoUrl'))
