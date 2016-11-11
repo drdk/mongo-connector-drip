@@ -96,7 +96,7 @@ class DocManager(DocManagerBase):
         message = self._doc_to_json(self._formatter.format_document(self.mongo[db][coll].find_one({"_id" : document_id})), str(document_id), 'U', timestamp)
         messages.append(message)
         jsonmessage = json.dumps(messages, default=json_util.default)
-        if (self._send_upsert(jsonmessage, false)):
+        if (self._send_upsert(jsonmessage, False)):
             self.write_last_doc_timestamp(timestamp)
 
     @wrap_exceptions
@@ -105,7 +105,7 @@ class DocManager(DocManagerBase):
         message = self._doc_to_json(self._formatter.format_document(doc), str(doc[self.unique_key]), 'C', timestamp)
         messages.append(message)
         jsonmessage = json.dumps(messages, default=json_util.default)
-        if (self._send_upsert(jsonmessage, false)):
+        if (self._send_upsert(jsonmessage, False)):
             self.write_last_doc_timestamp(timestamp)
 
     @wrap_exceptions
@@ -117,13 +117,13 @@ class DocManager(DocManagerBase):
                 messages = []
                 messages.extend(batch)
                 jsonmessages = json.dumps(messages, default=json_util.default)
-                if (self._send_upsert(jsonmessages, true)):
+                if (self._send_upsert(jsonmessages, True)):
                     self.write_last_doc_timestamp(timestamp)
                 else:
                     break
                 batch = list(next(jsondocs) for i in range(self.chunk_size))
         else:
-            if (self._send_upsert(jsondocs, true)):
+            if (self._send_upsert(jsondocs, True)):
                 self.write_last_doc_timestamp(timestamp)
 
     @wrap_exceptions
@@ -132,7 +132,7 @@ class DocManager(DocManagerBase):
         message = self._doc_to_json(None, str(document_id), 'D', timestamp)
         messages.append(message)
         jsonmessage = json.dumps(messages, default=json_util.default)
-        if (self._send_upsert(jsonmessage, false)):
+        if (self._send_upsert(jsonmessage, False)):
             self.write_last_doc_timestamp(timestamp)
 
     def write_last_doc_timestamp(self, timestamp):
