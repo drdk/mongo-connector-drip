@@ -92,19 +92,18 @@ class DocManager(DocManagerBase):
     @wrap_exceptions
     def update(self, document_id, update_spec, namespace, timestamp):
         db, coll = self._db_and_collection(namespace)
-        message = self._doc_to_json(self._formatter.format_document(self.mongo[db][coll].find_one({"_id" : document_id})), str(document_id), 'U', timestamp)
-        if (self._send_upsert(message)):
-            self.write_last_doc_timestamp(timestamp)
+        message = self.mongo[db][coll].find_one({"_id" : document_id})
+        messages = [message]
+        self.bulk_upsert(messages, namespace, timestamp, 'U')
 
     @wrap_exceptions
     def upsert(self, doc, namespace, timestamp):
-        message = self._doc_to_json(self._formatter.format_document(doc), str(doc[self.unique_key]), 'C', timestamp)
-        if (self._send_upsert(message)):
-            self.write_last_doc_timestamp(timestamp)
+        messages = [doc]
+        self.bulk_upsert(messages, namespace, timestamp)
 
     @wrap_exceptions
-    def bulk_upsert(self, docs, namespace, timestamp):
-        jsondocs = (self._doc_to_json(self._formatter.format_document(d), str(d[self.unique_key]), 'C', timestamp) for d in docs)
+    def bulk_upsert(self, docs, namespace, timestamp, action='C'):
+        jsondocs = (self._doc_to_json(self._formatter.format_document(d), str(d[self.unique_key]), action, timestamp) for d in docs)
         if self.chunk_size > 0:
             batch = list(next(jsondocs) for i in range(self.chunk_size))
             while batch:
@@ -122,7 +121,8 @@ class DocManager(DocManagerBase):
     @wrap_exceptions
     def remove(self, document_id, namespace, timestamp):
         message = self._doc_to_json(None, str(document_id), 'D', timestamp)
-        if (self._send_upsert(message)):
+        messages = [message]
+        if (self._send_upsert(messages)):
             self.write_last_doc_timestamp(timestamp)
 
     def write_last_doc_timestamp(self, timestamp):
@@ -183,6 +183,8 @@ class DocManager(DocManagerBase):
 
     def _send_upsert(self, docData):
         success = True
-        jsonOut = json.dumps(docData, default=json_util.default)
-        self.ironMqQueue.post(jsonOut)
+        for element in docData:
+          jsonOut = json.dumps(element, default=json_util.default)
+          self.ironMqQueue.post(jsonOut)
         return success
+
