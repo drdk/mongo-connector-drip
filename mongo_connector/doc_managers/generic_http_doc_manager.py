@@ -26,6 +26,8 @@ import time
 import os
 import pymongo
 
+from retrying import retry
+
 from datetime import datetime
 from threading import Timer
 from bson import json_util
@@ -185,6 +187,11 @@ class DocManager(DocManagerBase):
         success = True
         for element in docData:
           jsonOut = json.dumps(element, default=json_util.default)
-          self.ironMqQueue.post(jsonOut)
+          self._post_with_retry(jsonOut)
         return success
+
+    # Stop retrying after 2 hours (10.000 ms, 20.000 ms, 40.000 ms, 40.000 ms, 40.000 ms, ...)
+    @retry(wait_exponential_multiplier=10000, wait_exponential_max=40000, stop_max_delay=3600000)
+    def _post_with_retry(self, jsonData):
+        self.ironMqQueue.post(jsonData)
 
