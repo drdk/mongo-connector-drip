@@ -95,6 +95,8 @@ class DocManager(DocManagerBase):
     def update(self, document_id, update_spec, namespace, timestamp):
         db, coll = self._db_and_collection(namespace)
         message = self.mongo[db][coll].find_one({"_id" : document_id})
+        if message is None:
+            return        
         messages = [message]
         self.bulk_upsert(messages, namespace, timestamp, 'U')
 
